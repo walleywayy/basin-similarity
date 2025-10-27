@@ -12,6 +12,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import classification_report, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import joblib
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -208,13 +210,44 @@ def main():
     print("4. Validate on out-of-sample basins")
     print("5. Build interactive similarity map visualization")
     
+    # Save trained models and preprocessing objects
+    print("\nSaving trained models and preprocessing objects...")
+    models_dir = "models"
+    os.makedirs(models_dir, exist_ok=True)
+    
+    # Save models
+    joblib.dump(clf, f"{models_dir}/drought_classifier.joblib")
+    joblib.dump(reg, f"{models_dir}/streamflow_regressor.joblib")
+    joblib.dump(scaler, f"{models_dir}/feature_scaler.joblib")
+    joblib.dump(pca, f"{models_dir}/pca_transformer.joblib")
+    
+    # Save feature names and metadata
+    model_metadata = {
+        'feature_names': list(X.columns),
+        'target_mean': y_reg.mean(),
+        'target_std': y_reg.std(),
+        'drought_rate': y.mean(),
+        'n_basins': len(basin_features),
+        'n_samples': len(df)
+    }
+    joblib.dump(model_metadata, f"{models_dir}/model_metadata.joblib")
+    
+    print(f"✅ Models saved to {models_dir}/")
+    print(f"  - drought_classifier.joblib: Random Forest for drought prediction")
+    print(f"  - streamflow_regressor.joblib: Random Forest for streamflow prediction")
+    print(f"  - feature_scaler.joblib: StandardScaler for feature normalization")
+    print(f"  - pca_transformer.joblib: PCA for basin similarity mapping")
+    print(f"  - model_metadata.joblib: Feature names and model statistics")
+    
     print("\nFILES GENERATED:")
     print("- data/attributes.csv: Basin characteristics")
     print("- data/demo_gauges.txt: Basin IDs for similarity analysis")
     print("- data/timeseries.csv: Streamflow and meteorological data")
     print("- basin_similarity_map.png: PCA similarity visualization")
+    print(f"- {models_dir}/: Trained models and preprocessing objects")
     
     print("\n🎉 Analysis complete! The basin similarity framework is ready for further development.")
+    print("\nNEXT: Use predict_unseen_basin.py to make predictions on new basins!")
 
 if __name__ == "__main__":
     main()
